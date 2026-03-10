@@ -1,7 +1,10 @@
 # Dogs vs. Cats
 
-This is a PyTorch implementation of the classic Kaggle competition **"Dogs vs. Cats"** based on **ResNet-18** model. It can achieve 97.90% accuracy on the validation set.  
+This is a PyTorch implementation of the classic Kaggle competition **"Dogs vs. Cats"** classification based on a **ResNet-18** model. It can achieve 97.90% accuracy on the validation set after training for 80 epochs.  
 I'm using `PyTorch 2.10.0+cu128` in `Python 3.12.0`.
+
+#### <em>Update on ```2026/3/10```</em>: 
+Implemented **Transfer Learning** by **fine-tuning** a ResNet-18 model pre-trained on ImageNet. It can achieve 98.92% accuracy on the validation set for only 10 epochs.
 
 <br>
 <p align="center">
@@ -129,7 +132,15 @@ As the picture says, the model can achieve 97.90% accuracy on the validation set
 <p align="center">
   <img src="./images/training_metrics.png" height="300" />
 </p>
-<br><br>
+<br>
+
+Compared to a model trained from scratch, fine-tuning a pre-trained ResNet-18 model achieved an accuracy of 98.92% on the validation set in only 10 epochs.
+
+<br>
+<p align="center">
+  <img src="./images/training_metrics_transfer.png" height="300" />
+</p>
+<br>
 
 ## A Brief Introduction to CNN
 Convolutional Neural Networks (CNNs), also known as ConvNets, are neural network architectures inspired by the human visual system and are widely used in computer vision tasks. They are designed to process structured grid-like data, especially images by capturing spatial relationships between pixels.
@@ -166,3 +177,56 @@ To overcome the challenges of training very deep neural networks, Residual Netwo
 </p>
 
 A residual block lets the network skip layers by adding the original input to the processed output, making deep networks easier to train.
+
+## Fine-Tuning
+Fine-tuning allows a pre-trained model to adapt to a new task. This approach uses the knowledge gained from training a model on a large dataset and applying it to a smaller, domain-specific dataset. Fine-tuning involves adjusting the weights of the model's layers or updating certain parts of the model to improve its performance on the new task.
+<br>
+<p align="center">
+  <img src="./images/fine-tuning.png" height="300" />
+  <br>
+  <em><strong>Transfer Learning</strong></em>
+</p>
+
+As shown in the image below, fine-tuning consists of the following steps:  
+- Pretrain a neural network model, i.e., the source model, on a source dataset (e.g., the ImageNet dataset).  
+- Create a new neural network model, i.e., the target model. This copies all model designs and their parameters on the source model except the output layer. We assume that these model parameters contain the knowledge learned from the source dataset and this knowledge will also be applicable to the target dataset. We also assume that the output layer of the source model is closely related to the labels of the source dataset; thus it is not used in the target model.  
+- Add an output layer to the target model, whose number of outputs is the number of categories in the target dataset. Then randomly initialize the model parameters of this layer.  
+- Train the target model on the target dataset, such as a chair dataset. The output layer will be trained from scratch, while the parameters of all the other layers are fine-tuned based on the parameters of the source model.  
+<br>
+<p align="center">
+  <img src="./images/Fine tuning.png" height="300" />
+  <br>
+  <em><strong>Fine-Tuning</strong></em>
+</p>
+
+When target datasets are much smaller than source datasets, fine-tuning helps to improve models’ generalization ability.  
+
+#### <em>Fine-Tuning in this task</em>:  
+The target model copies all model designs with their parameters from the source model except the output layer, and fine-tunes these parameters based on the target dataset. In contrast, the output layer of the target model needs to be trained from scratch.
+```
+def ResNet18_transfer(num_classes=2):
+    weights = models.ResNet18_Weights.IMAGENET1K_V1
+    model = models.resnet18(weights=weights)
+    in_features = model.fc.in_features
+    model.fc = nn.Linear(in_features, num_classes)
+    return model
+```
+
+I set the base learning rate to a small value in order to fine-tune the model parameters obtained via pretraining. Based on the previous settings, the output layer parameters of the target model will be trained from scratch using a learning rate ten times greater.
+```
+# config.py
+NUM_EPOCHS = 10
+LEARNING_RATE = 1e-4
+
+
+# train.py
+model = ResNet18_transfer(num_classes=NUM_CLASSES).to(DEVICE)
+    criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+    params_1x = [param for name, param in model.named_parameters()
+                 if 'fc' not in name]
+    optimizer = optim.Adam([
+        {'params': params_1x},
+        {'params': model.fc.parameters(), 'lr': LEARNING_RATE * 10}
+    ], lr=LEARNING_RATE, weight_decay=1e-4)
+```
+If you run ```train.py``` while using transfer learning for the first time, it will automatically download the weight file from the internet. Later the program will load directly from the local disk and will no longer require an internet connection.
