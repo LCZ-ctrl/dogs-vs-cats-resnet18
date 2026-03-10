@@ -1,4 +1,5 @@
 import torch.nn as nn
+import torchvision.models as models
 
 
 class ResidualBlock(nn.Module):
@@ -86,3 +87,12 @@ class ResNet18(nn.Module):
         x = self.classifier(x)
 
         return x
+
+
+# get pretrained model for transfer learning
+def ResNet18_transfer(num_classes=2):
+    weights = models.ResNet18_Weights.IMAGENET1K_V1
+    model = models.resnet18(weights=weights)
+    in_features = model.fc.in_features
+    model.fc = nn.Linear(in_features, num_classes)
+    return model

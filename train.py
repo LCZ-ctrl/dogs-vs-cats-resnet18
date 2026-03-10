@@ -7,7 +7,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from tqdm import tqdm
 from pathlib import Path
 from config import *
-from model import ResNet18
+from model import ResNet18, ResNet18_transfer
 from dataset import get_train_val_loaders
 from utils import *
 
@@ -16,9 +16,20 @@ def train():
     set_seed(SEED)
     train_loader, val_loader = get_train_val_loaders()
 
+    # train from scratch
     model = ResNet18(num_classes=NUM_CLASSES).to(DEVICE)
     criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=1e-4)
+
+    # transfer learning
+    # model = ResNet18_transfer(num_classes=NUM_CLASSES).to(DEVICE)
+    # criterion = nn.CrossEntropyLoss(label_smoothing=0.1)
+    # params_1x = [param for name, param in model.named_parameters()
+    #              if 'fc' not in name]
+    # optimizer = optim.Adam([
+    #     {'params': params_1x},
+    #     {'params': model.fc.parameters(), 'lr': LEARNING_RATE * 10}
+    # ], lr=LEARNING_RATE, weight_decay=1e-4)
 
     # reduce lr on plateau
     scheduler = ReduceLROnPlateau(
