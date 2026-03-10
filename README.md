@@ -55,7 +55,7 @@ python prepare_data.py
 ```
 This will split the raw training data into 80% Training and 20% Validation.
 #### <em>Augmentation</em>:  
-I placed data argumentation in ```dataset.py```
+I placed data augmentation in ```dataset.py```
 ```
 data_transforms = {
     'train': transforms.Compose([
@@ -95,7 +95,7 @@ To start training, run the command -
 ```
 python train.py
 ```
-I used ```ReduceLROnPlateau``` to monitor the validation loss. If the validation loss does not decrease within 5 epochs, the learning rate is reduced by a factor of 0.5.
+I used ```ReduceLROnPlateau``` to monitor the validation loss. If the validation loss does not decrease within 5 epochs, the learning rate will be reduced by a factor of 0.5.
 ```
 scheduler = ReduceLROnPlateau(
     optimizer,
