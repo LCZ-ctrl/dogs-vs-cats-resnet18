@@ -18,8 +18,7 @@ def predict_random_one():
     test_loader = get_test_loader()
     test_dataset = test_loader.dataset
 
-    # idx = random.randint(0, len(test_dataset) - 1)
-    idx=3975
+    idx = random.randint(0, len(test_dataset) - 1)
     img_tensor, img_id = test_dataset[idx]
 
     filename = test_dataset.imgs[idx]
