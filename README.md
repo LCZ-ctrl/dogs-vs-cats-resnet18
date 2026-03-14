@@ -230,3 +230,6 @@ model = ResNet18_transfer(num_classes=NUM_CLASSES).to(DEVICE)
     ], lr=LEARNING_RATE, weight_decay=1e-4)
 ```
 If you run ```train.py``` while using transfer learning for the first time, it will automatically download the weight file from the internet. Later the program will load directly from the local disk and will no longer require an internet connection.
+<br><br>
+
+<em><strong>My pre-trained model:</strong></em> [model](https://drive.google.com/file/d/1WJk6qTZr5EogzsXvAwrsiJ6rqzrU4bpY/view?usp=drive_link)
